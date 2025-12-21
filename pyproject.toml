@@ -1,0 +1,10 @@
+[project]
+name = "flower-classifier"
+version = "0.1.0"
+description = "Package for developing a flower classification model using DPhi's 'Flower Recognition' competition data"
+readme = "README.md"
+authors = [
+    { name = "Alexander Semenyuk", email = "aww.semenyuk@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
