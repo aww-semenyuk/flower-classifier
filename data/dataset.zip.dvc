@@ -1,0 +1,5 @@
+outs:
+- md5: 48bc3cbaa25f119607617be5eea0e988
+  size: 166692055
+  hash: md5
+  path: dataset.zip
