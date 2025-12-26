@@ -1,0 +1,9 @@
+[core]
+    remote = storage
+['remote "storage"']
+    url = https://storage.yandexcloud.net/flower-classifier-bucket/dvc-data
+
+# Use config below for pushing (put access keys in config.local)
+# ['remote "storage"']
+#     url = s3://flower-classifier-bucket/dvc-data
+#     endpointurl = https://storage.yandexcloud.net
