@@ -1,0 +1,7 @@
+data:
+  source_zip_filename: dataset.zip
+  dataset_output_dir: dataset
+
+  split:
+    train_split_size: 0.75
+    seed: 42
