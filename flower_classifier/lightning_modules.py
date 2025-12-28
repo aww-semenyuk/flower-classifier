@@ -4,7 +4,7 @@ import lightning as L
 import torch
 import torch.nn.functional as F
 from omegaconf import DictConfig
-from torchmetrics.classification import MulticlassAccuracy
+from torchmetrics.classification import MulticlassAccuracy, MulticlassF1Score
 from transformers import ViTForImageClassification
 
 from flower_classifier.models import BaselineCNN
@@ -35,7 +35,9 @@ class FlowerClassifierModule(L.LightningModule):
 
         self.train_acc = MulticlassAccuracy(num_classes=num_classes)
         self.val_acc = MulticlassAccuracy(num_classes=num_classes)
+        self.val_f1 = MulticlassF1Score(num_classes=num_classes, average="macro")
         self.test_acc = MulticlassAccuracy(num_classes=num_classes)
+        self.test_f1 = MulticlassF1Score(num_classes=num_classes, average="macro")
 
     def forward(self, x):
         if isinstance(self.model, ViTForImageClassification):
@@ -65,17 +67,21 @@ class FlowerClassifierModule(L.LightningModule):
 
         preds = logits.argmax(dim=1)
         acc = self.val_acc(preds, y)
+        f1 = self.val_f1(preds, y)
 
         self.log("val_loss", loss, prog_bar=True)
         self.log("val_acc", acc, prog_bar=True, on_epoch=True)
+        self.log("val_f1", f1, on_epoch=True)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
         preds = logits.argmax(dim=1)
         acc = self.test_acc(preds, y)
+        f1 = self.test_f1(preds, y)
 
         self.log("test_acc", acc)
+        self.log("test_f1", f1)
 
     def configure_optimizers(self):
         return torch.optim.AdamW(filter(lambda p: p.requires_grad, self.parameters()), lr=self.lr)
