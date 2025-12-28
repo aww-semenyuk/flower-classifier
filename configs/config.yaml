@@ -1,2 +1,5 @@
 defaults:
   - data
+  - logging
+  - model: cnn
+  - _self_
