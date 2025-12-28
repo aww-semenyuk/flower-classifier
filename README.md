@@ -1,6 +1,7 @@
 # flower-classifier
 
 ```
+uv sync
 uv run pre-commit install
 uv run pre-commit run -a
 uv run python -m flower_classifier.commands download_data
