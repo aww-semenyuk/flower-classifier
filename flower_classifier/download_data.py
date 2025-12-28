@@ -1,3 +1,5 @@
+"""Module for downloading data with DVC api"""
+
 from dvc.repo import Repo
 
 from flower_classifier.config import PROJECT_DIR

@@ -1,3 +1,5 @@
+"""Module for initial data preprocessing"""
+
 import pathlib
 import tempfile
 import zipfile
@@ -11,19 +13,15 @@ from flower_classifier.config import DATA_DIR, get_hydra_cfg
 def prepare_splits(cfg: DictConfig) -> None:
     """Unzip raw data, load as dataset and split into train/val/test, save to disk"""
 
-    data_cfg = cfg.data
-    split_cfg = data_cfg.split
-
-    zip_path = DATA_DIR / data_cfg.source_zip_filename
-    dst_path = DATA_DIR / data_cfg.dataset_output_dir
-
-    seed = split_cfg.seed
-    train_size = split_cfg.train_split_size
+    zip_path = DATA_DIR / cfg.data.source_zip_filename
+    dst_path = DATA_DIR / cfg.data.dataset_output_dir
 
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(zip_path) as zipref:
             zipref.extractall(tmpdir)
 
+        # iterate over subdirectories representing each class
+        # to create "image path"-"label" dataset
         subdirs = [x for x in (pathlib.Path(tmpdir) / zip_path.stem).iterdir() if x.is_dir()]
         labels = []
         paths = []
@@ -35,24 +33,28 @@ def prepare_splits(cfg: DictConfig) -> None:
             labels.extend([class_name] * len(imgs))
 
         ds = Dataset.from_dict({"image": list(map(str, paths)), "label": labels})
-        ds = (ds
-            .cast_column("image", Image())
-            .cast_column("label", ClassLabel(names=list(set(labels))))
-        )  # fmt: skip
 
-        ds_train_testvalid = ds.train_test_split(
-            train_size=train_size, stratify_by_column="label", seed=seed
+        # cast paths to images and string labels to integers
+        ds = ds.cast_column("image", Image())
+        ds = ds.cast_column("label", ClassLabel(names=list(set(labels))))
+
+        # split dataset into train / test-val
+        ds_train_testval = ds.train_test_split(
+            train_size=cfg.data.split.train_split_size,
+            stratify_by_column="label",
+            seed=cfg.data.split.seed,
         )
 
-        ds_test_valid = ds_train_testvalid["test"].train_test_split(
-            test_size=0.5, stratify_by_column="label", seed=seed
+        # split test and val equally
+        ds_test_val = ds_train_testval["test"].train_test_split(
+            test_size=0.5, stratify_by_column="label", seed=cfg.data.split.seed
         )
 
         ds = DatasetDict(
             {
-                "train": ds_train_testvalid["train"],
-                "test": ds_test_valid["test"],
-                "valid": ds_test_valid["train"],
+                "train": ds_train_testval["train"],
+                "val": ds_test_val["train"],
+                "test": ds_test_val["test"],
             }
         )
 

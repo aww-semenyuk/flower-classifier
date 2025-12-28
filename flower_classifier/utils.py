@@ -1,13 +1,21 @@
+"""Utils module"""
+
+import torch
+from datasets import Dataset
 from omegaconf import DictConfig
+from PIL import Image
 from torchvision import transforms
 from transformers import ViTImageProcessor
 
 
 class FlowerDatasetWrapper:
-    def __init__(self, ds, cfg: DictConfig):
+    """Dataset wrapper with image transforming"""
+
+    def __init__(self, ds: Dataset, cfg: DictConfig):
         self.cfg = cfg
         self.ds = ds
 
+        # define image processor based on model type
         if self.cfg.model.name == "cnn":
             self.processor = transforms.Compose(
                 [
@@ -19,7 +27,7 @@ class FlowerDatasetWrapper:
         elif self.cfg.model.name == "vit":
             self.processor = ViTImageProcessor.from_pretrained(self.cfg.model.model_id)
 
-    def _transform(self, image):
+    def _transform(self, image: Image.Image) -> torch.Tensor:
         if self.cfg.model.name == "cnn":
             return self.processor(image)
         if self.cfg.model.name == "vit":
@@ -29,10 +37,7 @@ class FlowerDatasetWrapper:
         return len(self.ds)
 
     def __getitem__(self, idx):
-        item = self.ds[idx]
-        image = item["image"]
-        label = item["label"]
-
+        image, label = self.ds[idx]["image"], self.ds[idx]["label"]
         image = self._transform(image)
 
         return image, label

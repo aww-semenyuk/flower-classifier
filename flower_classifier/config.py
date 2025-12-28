@@ -1,3 +1,5 @@
+"""Module for global constansts and config helpers"""
+
 from pathlib import Path
 
 from hydra import compose, initialize_config_dir

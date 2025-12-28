@@ -1,3 +1,5 @@
+"""Module for training models"""
+
 import git
 import lightning as L
 from datasets import load_from_disk
@@ -15,7 +17,9 @@ from flower_classifier.utils import FlowerDatasetWrapper
 def train(cfg: DictConfig) -> None:
     seed_everything(cfg.train.seed, workers=True)
 
+    # dataloaders definition
     dataset = load_from_disk(DATA_DIR / cfg.data.dataset_output_dir)
+    num_classes = dataset["train"].features["label"].num_classes
 
     train_loader = DataLoader(
         FlowerDatasetWrapper(dataset["train"], cfg),
@@ -42,35 +46,30 @@ def train(cfg: DictConfig) -> None:
         persistent_workers=True,
     )
 
-    num_classes = dataset["train"].features["label"].num_classes
-
-    model = FlowerClassifierModule(num_classes=num_classes, cfg=cfg)
-
-    commit_id = git.Repo(str(PROJECT_DIR)).head.commit.hexsha
-
+    # logger definition
     mlf_logger = MLFlowLogger(
         experiment_name=cfg.logging.experiment_name,
         run_name=cfg.model.name,
         tracking_uri=cfg.logging.tracking_uri,
     )
 
-    mlf_logger.log_hyperparams({"commit_id": commit_id})
-
-    train_cfg = cfg.train
+    # callbacks definition
+    callbacks_cfg = cfg.train.callbacks
     checkpoint_cb = ModelCheckpoint(
         dirpath=PROJECT_DIR / "checkpoints",
-        monitor=train_cfg.callbacks.checkpoint.monitor,
-        mode=train_cfg.callbacks.checkpoint.mode,
-        save_top_k=train_cfg.callbacks.checkpoint.save_top_k,
-        filename=train_cfg.callbacks.checkpoint.filename,
+        monitor=callbacks_cfg.checkpoint.monitor,
+        mode=callbacks_cfg.checkpoint.mode,
+        save_top_k=callbacks_cfg.checkpoint.save_top_k,
+        filename=callbacks_cfg.checkpoint.filename,
     )
     earlystopping_cb = EarlyStopping(
-        monitor=train_cfg.callbacks.early_stopping.monitor,
-        mode=train_cfg.callbacks.early_stopping.mode,
-        patience=train_cfg.callbacks.early_stopping.patience,
-        min_delta=train_cfg.callbacks.early_stopping.min_delta,
+        monitor=callbacks_cfg.early_stopping.monitor,
+        mode=callbacks_cfg.early_stopping.mode,
+        patience=callbacks_cfg.early_stopping.patience,
+        min_delta=callbacks_cfg.early_stopping.min_delta,
     )
 
+    # trainer
     trainer = L.Trainer(
         deterministic=True,
         max_epochs=cfg.model.epochs,
@@ -81,10 +80,13 @@ def train(cfg: DictConfig) -> None:
         callbacks=[checkpoint_cb, earlystopping_cb],
     )
 
+    model = FlowerClassifierModule(num_classes=num_classes, cfg=cfg)
+    mlf_logger.log_hyperparams({"commit_id": git.Repo(str(PROJECT_DIR)).head.commit.hexsha})
+
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
+    # log best checkpoint as mlflow artifact
     best_ckpt_path = checkpoint_cb.best_model_path
-
     if best_ckpt_path:
         mlf_logger.experiment.log_artifact(
             run_id=mlf_logger.run_id,

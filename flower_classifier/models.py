@@ -1,7 +1,11 @@
+"""Module for defining pytorch models"""
+
 from torch import nn
 
 
 class BaselineCNN(nn.Module):
+    """Basic CNN model expecting 128x128 input"""
+
     def __init__(self, num_classes: int):
         super().__init__()
 
