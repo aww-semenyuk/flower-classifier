@@ -1,7 +1,7 @@
 from torch import nn
 
 
-class SimpleCNN(nn.Module):
+class BaselineCNN(nn.Module):
     def __init__(self, num_classes: int):
         super().__init__()
 

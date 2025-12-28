@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from torchmetrics.classification import MulticlassAccuracy
 from transformers import ViTForImageClassification
 
-from flower_classifier.models import SimpleCNN
+from flower_classifier.models import BaselineCNN
 
 
 class FlowerClassifierModule(L.LightningModule):
@@ -16,7 +16,7 @@ class FlowerClassifierModule(L.LightningModule):
         self.lr = cfg.model.learning_rate
 
         if cfg.model.name == "cnn":
-            self.model = SimpleCNN(num_classes)
+            self.model = BaselineCNN(num_classes)
 
         elif cfg.model.name == "vit":
             self.model = ViTForImageClassification.from_pretrained(

@@ -1,5 +1,6 @@
 defaults:
+  - model: cnn
   - data
   - logging
-  - model: cnn
+  - train
   - _self_

@@ -4,4 +4,4 @@ train_only_classifier_head: True
 train_batch_size: 32
 val_batch_size: 32
 learning_rate: 1e-4
-epochs: 1
+epochs: 3

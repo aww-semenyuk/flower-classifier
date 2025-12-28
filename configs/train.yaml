@@ -1,0 +1,21 @@
+train:
+  seed: 42
+  log_steps_per_epoch: 15
+  dataloader_num_workers: 4
+
+  trainer:
+    accelerator: auto
+    devices: auto
+
+  callbacks:
+    checkpoint:
+      monitor: val_acc
+      mode: max
+      save_top_k: 1
+      filename: "{epoch:02d}-{val_acc:.4f}"
+
+    early_stopping:
+      monitor: val_acc
+      mode: max
+      patience: 5
+      min_delta: 0.001
