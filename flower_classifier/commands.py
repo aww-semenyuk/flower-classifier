@@ -3,7 +3,7 @@
 import fire
 
 from flower_classifier.download_data import main as download_data
-from flower_classifier.preprocess import main as preprocess_data
+from flower_classifier.preprocess_data import main as preprocess_data
 from flower_classifier.train import main as train
 
 
