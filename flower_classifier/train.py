@@ -30,7 +30,7 @@ def train(cfg: DictConfig) -> None:
         persistent_workers=True,
     )
     val_loader = DataLoader(
-        FlowerDatasetWrapper(dataset["valid"], cfg),
+        FlowerDatasetWrapper(dataset["val"], cfg),
         batch_size=cfg.model.val_batch_size,
         shuffle=False,
         num_workers=cfg.train.dataloader_num_workers,
